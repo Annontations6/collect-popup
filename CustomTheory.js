@@ -4,10 +4,10 @@ import { BigNumber } from "./api/BigNumber";
 import { theory } from "./api/Theory";
 import { Utils } from "./api/Utils";
 
-var id = "my_custom_theory_id";
-var name = "My Custom Theory";
+var id = "collect";
+var name = "Collect Popup";
 var description = "A basic theory.";
-var authors = "Gilles-Philippe Paillé";
+var authors = "Annontations6";
 var version = 1;
 
 var currency;
@@ -18,7 +18,7 @@ var achievement1, achievement2;
 var chapter1, chapter2;
 
 var init = () => {
-    currency = theory.createCurrency();
+    currency = theory.createCurrency("?", "?");
 
     ///////////////////
     // Regular Upgrades
@@ -35,16 +35,27 @@ var init = () => {
     {
         let getDesc = (level) => "c_2=2^{" + level + "}";
         let getInfo = (level) => "c_2=" + getC2(level).toString(0);
-        c2 = theory.createUpgrade(1, currency, new ExponentialCost(5, Math.log2(10)));
+        c2 = theory.createUpgrade(1, currency, new ExponentialCost(5, Math.log2(9)));
         c2.getDescription = (_) => Utils.getMath(getDesc(c2.level));
         c2.getInfo = (amount) => Utils.getMathTo(getInfo(c2.level), getInfo(c2.level + amount));
     }
 
+    // prestige
+    {
+        prestige = theory.createUpgrade(0, currency, new FreeCost());
+        prestige.getDescription = (_) => "Open popup Menu";
+        prestige.getInfo = (amount) => "Open popup Menu";
+        prestige.boughtOrRefunded = (_) => {
+            psPUP.show();
+            popup.level = 0;
+        }
+    }
+
     /////////////////////
     // Permanent Upgrades
-    theory.createPublicationUpgrade(0, currency, 1e10);
-    theory.createBuyAllUpgrade(1, currency, 1e13);
-    theory.createAutoBuyerUpgrade(2, currency, 1e30);
+    theory.createPublicationUpgrade(0, currency, BigNumber.from("ee9999999"));
+    theory.createBuyAllUpgrade(1, currency, BigNumber.from("ee9999999"));
+    theory.createAutoBuyerUpgrade(2, currency, BigNumber.from("ee9999999"));
 
     ///////////////////////
     //// Milestone Upgrades
@@ -75,6 +86,54 @@ var init = () => {
     chapter2 = theory.createStoryChapter(1, "My Second Chapter", "This is line 1 again,\nand this is line 2... again.\n\nNice again.", () => c2.level > 0);
 
     updateAvailability();
+
+    var popup = ui.createPopup({
+        title: "My Popup",
+        content: ui.createStackLayout({
+            children: [
+                ui.createImage({source: ImageSource.ACCELERATE}),
+                ui.createLabel({text: "Clicks"}),
+                ui.createButton({text: "+1 C", onClicked: () => currency.value += BigNumber.ONE}),
+                ui.createButton({text: "+5 C", onClicked: () => currency.value += BigNumber.from(5)}),
+                ui.createButton({text: "+25 C", onClicked: () => currency.value += BigNumber.from(25)}),
+                ui.createButton({text: "Math", onClicked: () => mathP.show()}),
+                ui.createButton({text: "Debug", onClicked: () => debugP.show()}),
+                ui.createButton({text: "Close", onClicked: () => popup.hide()})
+            ]
+        })
+    });
+
+    var mathP = ui.createPopup({
+        title: "Math Popup",
+        content: ui.createStackLayout({
+            children: [
+                ui.createLabel({text: "Made is 3^3 = 27."}),
+                ui.createImage({source: ImageSource.ACCELERATE}),
+                ui.createButton({text: "Close", onClicked: () => popup.hide()})
+            ]
+        })
+    });
+
+    var debugP = ui.createPopup({
+        title: "Debug",
+        content: ui.createStackLayout({
+            children: [
+                ui.createLabel({text: "Everyone Text Buttons!"}),
+                ui.createButton({text: "Test button 1"}),
+                ui.createButton({text: "Test button 2"}),
+                ui.createButton({text: "Test button 3"}),
+                ui.createButton({text: "Test button 4"}),
+                ui.createLabel({text: "Symbols Buttons"}),
+                ui.createButton({text: "βυ丅丅〄♑"}),
+                ui.createButton({text: "⠡⢞⢣⠯‡"}),
+                ui.createLabel({text: "Image"}),
+                ui.createImage({source: ImageSource.ACCELERATE}),
+                ui.createButton({text: "Close", onClicked: () => popup.hide()})
+            ]
+        })
+    });
+    
+    popup.show();
 }
 
 var updateAvailability = () => {
@@ -84,8 +143,7 @@ var updateAvailability = () => {
 var tick = (elapsedTime, multiplier) => {
     let dt = BigNumber.from(elapsedTime * multiplier);
     let bonus = theory.publicationMultiplier;
-    currency.value += dt * bonus * getC1(c1.level).pow(getC1Exponent(c1Exp.level)) *
-                                   getC2(c2.level).pow(getC2Exponent(c2Exp.level));
+    currency.value += dt * dt * getC1(c1.level) * (getC2(c2.level).pow(getC2Exponent(c2Exp.level))) / 2
 }
 
 var getPrimaryEquation = () => {
@@ -111,7 +169,7 @@ var getTau = () => currency.value;
 var get2DGraphValue = () => currency.value.sign * (BigNumber.ONE + currency.value.abs()).log10().toNumber();
 
 var getC1 = (level) => Utils.getStepwisePowerSum(level, 2, 10, 0);
-var getC2 = (level) => BigNumber.TWO.pow(level);
+var getC2 = (level) => Utils.getStepwisePowerSum(level, 5, 10, 0);
 var getC1Exponent = (level) => BigNumber.from(1 + 0.05 * level);
 var getC2Exponent = (level) => BigNumber.from(1 + 0.05 * level);
 
