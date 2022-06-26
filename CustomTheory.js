@@ -46,7 +46,7 @@ var init = () => {
         prestige.getDescription = (_) => "Open popup Menu";
         prestige.getInfo = (amount) => "Open popup Menu";
         prestige.boughtOrRefunded = (_) => {
-            psPUP.show();
+            popup.show();
             popup.level = 0;
         }
     }
