@@ -42,7 +42,7 @@ var init = () => {
 
     // prestige
     {
-        prestige = theory.createUpgrade(0, currency, new FreeCost());
+        prestige = theory.createUpgrade(9999, currency, new FreeCost());
         prestige.getDescription = (_) => "Open popup Menu";
         prestige.getInfo = (amount) => "Open popup Menu";
         prestige.boughtOrRefunded = (_) => {
